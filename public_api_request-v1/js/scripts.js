@@ -9,7 +9,7 @@ const searchDiv = document.querySelector("div.search-container");
 
 let users = [];
 let usersCopy = [];
-let selectedUser = -1;
+let selectedUser;
 let searchText;
 
 
@@ -21,7 +21,7 @@ Retrieve Data
 // Fethes the data for 12 users from randomuser.me then parses the data and passes the array to the generateUsers function.
 fetch('https://randomuser.me/api/?results=12&nat=us&inc=picture,name,email,location,cell,dob')
     .then((data) => data.json())
-    .then(res => generateUsers(res.results))
+    .then(res => {users = res.results; displayUsers(users)})
     .catch(err => console.error('There was an error fetching the data:' + err));
 
 
@@ -31,13 +31,6 @@ Functions
 
 
 // Generates the HTML based on the array of user objects passed to it and inserts the HTML into the gallery div.
-function generateUsers (data) {
-    users = data;
-    usersCopy = data.slice();
-    displayUsers(users);
-}
-
-// Function to display the users.
 function displayUsers (users) {
     let html = '';
     gallery.innerHTML = '';
@@ -100,37 +93,37 @@ function returnUserIndex (email) {
 // Normalize cell phone with regex.
 // I learned how to do this from https://stackoverflow.com/questions/8358084/regular-expression-to-reformat-a-us-phone-number-in-javascript
 function normalizeCell (cell) {
-    cell = cell.replace(/[^\d]/g, "");
+    cell = cell.replace(/[^\d]/g, '');
 
     if (cell.length == 10) {
-        return cell.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+        return cell.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
     } else {
-        return "Invalid Cell #";
+        return 'Invalid Cell #';
     }
 }
 
 // This function returns a normalized DOB.
 function normalizeDOB (dob) {
     dob = dob.substring(0, 10);
-    dob = dob.replace(/[^\d]/g, "");
+    dob = dob.replace(/[^\d]/g, '');
 
     if (dob.length == 8) {
-        return dob.replace(/(\d{4})(\d{2})(\d{2})/, "$2/$3/$1");
+        return dob.replace(/(\d{4})(\d{2})(\d{2})/, '$2/$3/$1');
     } else {
-        return "Invalid DoB";
+        return 'Invalid DoB';
     }
 }
 
 // Adds a serchbar to the searchDiv.
 function insertSearchbar () {
-    searchDiv.insertAdjacentHTML("beforeend", 
+    searchDiv.insertAdjacentHTML('beforeend', 
     `<form action="#" method="get">
         <input type="search" id="search-input" class="search-input" placeholder="Search...">
         <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
     </form>`);
 
-    createSearch("keyup");
-    createSearch("submit")
+    createSearch('keyup');
+    createSearch('submit')
 }
 
 // Creates searchbar functionality
@@ -142,11 +135,11 @@ function createSearch (eventParam) {
         let searchList = [];
         searchText = (searchbar.value).toLowerCase();
 
-        for (let i = 0; i < usersCopy.length; i++) {
+        for (let i = 0; i < users.length; i++) {
             let name = '';
-            name = (usersCopy[i].name.first + ' ' + usersCopy[i].name.last).toLowerCase();
+            name = (users[i].name.first + ' ' + users[i].name.last).toLowerCase();
             if (name.indexOf(searchText) !== -1) {
-            searchList.push(usersCopy[i]);
+            searchList.push(users[i]);
             }
         }
 
@@ -173,21 +166,21 @@ Event Listeners
 
 
 // Adds an event listener to the gallery div. If a user card is clicked, it calls the generateModal function.
-gallery.addEventListener("click", (e) => {
-    let email = "";
+gallery.addEventListener('click', (e) => {
+    let email = '';
 
     let target = e.target;
     let targetParent = e.target.parentElement;
     let targetGrandparent = e.target.parentElement.parentElement;
 
-    if (target.className === "card") {
-        email = target.querySelector(`p.card-text`).textContent;
+    if (target.className === 'card') {
+        email = target.querySelector("p.card-text").textContent;
 
-    } else if (targetParent.className === "card") {
-        email = targetParent.querySelector(`p.card-text`).textContent;
+    } else if (targetParent.className === 'card') {
+        email = targetParent.querySelector("p.card-text").textContent;
 
     } else if (targetGrandparent.className === "card") {
-        email = targetGrandparent.querySelector(`p.card-text`).textContent;
+        email = targetGrandparent.querySelector("p.card-text").textContent;
     }
     
     if (email !== "") {
@@ -196,22 +189,22 @@ gallery.addEventListener("click", (e) => {
 });
 
 // Adds an event listener the the body. If a modal exit button is selected, it removes the modal.
-body.addEventListener("click", (e) => {
-    if (e.target.id === "modal-close-btn" || e.target.parentElement.id === "modal-close-btn") {
+body.addEventListener('click', (e) => {
+    if (e.target.id === 'modal-close-btn' || e.target.parentElement.id === 'modal-close-btn') {
         document.querySelector("body > div.modal-container").remove();
     }
 })
 
 // Adds an event listener the the body. It cycles through the users when the 'next' and 'previous' buttons are selected in the modal.
-body.addEventListener("click", (e) => {
-    if (e.target.id === "modal-next") {
+body.addEventListener('click', (e) => {
+    if (e.target.id === 'modal-next') {
         if (selectedUser === 11) {
             generateModal(0);
         } else {
             generateModal(selectedUser + 1);
         }
         document.querySelector("body > div.modal-container").remove();
-    } else if (e.target.id === "modal-prev") {
+    } else if (e.target.id === 'modal-prev') {
         if (selectedUser === 0) {
             generateModal(11);
         } else {
