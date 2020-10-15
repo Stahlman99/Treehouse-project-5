@@ -7,9 +7,10 @@ const gallery = document.querySelector("#gallery");
 const body = document.querySelector("body");
 const searchDiv = document.querySelector("div.search-container");
 
-// The array of users we will retrieve from randomuser.me.
 let users = [];
+let usersCopy = [];
 let selectedUser = -1;
+let searchText;
 
 
 /*
@@ -32,6 +33,12 @@ Functions
 // Generates the HTML based on the array of user objects passed to it and inserts the HTML into the gallery div.
 function generateUsers (data) {
     users = data;
+    usersCopy = data.slice();
+    displayUsers(users);
+}
+
+// Function to display the users.
+function displayUsers (users) {
     let html = '';
     gallery.innerHTML = '';
 
@@ -45,14 +52,16 @@ function generateUsers (data) {
                 <p class="card-text cap">${element.location.city}, ${element.location.state}</p>`
         html += `</div></div>`;
     });
+
+    if (users.length === 0) {
+        html = "<h2>No users match that name.</h2>"
+    }
+
     gallery.insertAdjacentHTML('beforeend', html);
 }
 
 // Creates the Modal and adds it to the body of the HTML.
 function generateModal (userIndex) {
-    if (selectedUser !== -1) {
-        document.querySelector("body > div.modal-container").remove();
-    }
 
     let user = users[userIndex];
     selectedUser = userIndex;
@@ -112,45 +121,42 @@ function normalizeDOB (dob) {
     }
 }
 
-// // Adds a serchbar to the searchDiv.
-// function insertSearchbar () {
-//     searchDiv.insertAdjacentHTML("beforeend", 
-//     `<form action="#" method="get">
-//         <input type="search" id="search-input" class="search-input" placeholder="Search...">
-//         <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
-//     </form>`);
+// Adds a serchbar to the searchDiv.
+function insertSearchbar () {
+    searchDiv.insertAdjacentHTML("beforeend", 
+    `<form action="#" method="get">
+        <input type="search" id="search-input" class="search-input" placeholder="Search...">
+        <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+    </form>`);
 
-//     createSearch("keydown");
-//     createSearch("submit")
-// }
+    createSearch("keyup");
+    createSearch("submit")
+}
 
-// // Creates searchbar functionality
-// function createSearch (eventParam) {
+// Creates searchbar functionality
+function createSearch (eventParam) {
     
-//     const searchbar = document.querySelector("#search-input");
+    const searchbar = document.querySelector("#search-input");
 
-//     searchDiv.addEventListener(eventParam, (e) => {
+    searchDiv.addEventListener(eventParam, (e) => {
+        let searchList = [];
+        searchText = (searchbar.value).toLowerCase();
 
-//         let usersCopy = users.slice();
-//         let searchList = [];
-//         let text = (searchbar.value).toLowerCase();
+        for (let i = 0; i < usersCopy.length; i++) {
+            let name = '';
+            name = (usersCopy[i].name.first + ' ' + usersCopy[i].name.last).toLowerCase();
+            if (name.indexOf(searchText) !== -1) {
+            searchList.push(usersCopy[i]);
+            }
+        }
 
-//         for (let i = 0; i < usersCopy.length; i++) {
-//             let name = '';
-//             name = (usersCopy[i].name.first + ' ' + usersCopy[i].name.last).toLowerCase();
-//             if (name.indexOf(text) !== -1) {
-//             searchList.push(usersCopy[i]);
-//             }
-//         }
+        if (searchList === []) {
+            displayUsers(users);
+        }
 
-//         if (searchList === []) {
-//             generateUsers(users);
-//         }
-
-//         generateUsers(searchList);
-//         console.log(usersCopy);
-//     });
-// }
+        displayUsers(searchList);
+    });
+}
 
 
 /*
@@ -158,7 +164,7 @@ Call Functions
 */
 
 
-// insertSearchbar();
+insertSearchbar();
 
 
 /*
@@ -204,11 +210,13 @@ body.addEventListener("click", (e) => {
         } else {
             generateModal(selectedUser + 1);
         }
+        document.querySelector("body > div.modal-container").remove();
     } else if (e.target.id === "modal-prev") {
         if (selectedUser === 0) {
             generateModal(11);
         } else {
             generateModal(selectedUser - 1);
         }
+        document.querySelector("body > div.modal-container").remove();
     }
 })
