@@ -1,7 +1,21 @@
-// Variable declarations
+/*
+Variable Declarations
+*/
+
+
 const gallery = document.querySelector("#gallery");
 const body = document.querySelector("body");
+const searchDiv = document.querySelector("div.search-container");
+
+// The array of users we will retrieve from randomuser.me.
 let users = [];
+let selectedUser = -1;
+
+
+/*
+Retrieve Data
+*/
+
 
 // Fethes the data for 12 users from randomuser.me then parses the data and passes the array to the generateUsers function.
 fetch('https://randomuser.me/api/?results=12&nat=us&inc=picture,name,email,location,cell,dob')
@@ -9,10 +23,18 @@ fetch('https://randomuser.me/api/?results=12&nat=us&inc=picture,name,email,locat
     .then(res => generateUsers(res.results))
     .catch(err => console.error('There was an error fetching the data:' + err));
 
+
+/*
+Functions
+*/
+
+
 // Generates the HTML based on the array of user objects passed to it and inserts the HTML into the gallery div.
 function generateUsers (data) {
     users = data;
     let html = '';
+    gallery.innerHTML = '';
+
     users.forEach(element => {
         //console.log(`${element.picture.thumbnail} - ${element.name.first} ${element.name.last}: ${element.location.city}, ${element.location.state} - ${element.email}`);
         html += `<div class="card"><div class="card-img-container">`;
@@ -27,7 +49,14 @@ function generateUsers (data) {
 }
 
 // Creates the Modal and adds it to the body of the HTML.
-function generateModal (user) {
+function generateModal (userIndex) {
+    if (selectedUser !== -1) {
+        document.querySelector("body > div.modal-container").remove();
+    }
+
+    let user = users[userIndex];
+    selectedUser = userIndex;
+
     body.insertAdjacentHTML('beforeend',`<div class="modal-container">
         <div class="modal">
             <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
@@ -42,14 +71,19 @@ function generateModal (user) {
                 <p class="modal-text">Birthday: ${normalizeDOB(user.dob.date)}</p>
             </div>
         </div>
+    
+        <div class="modal-btn-container">
+            <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
+            <button type="button" id="modal-next" class="modal-next btn">Next</button>
+        </div>
     </div>`);
 }
 
 // Loops through the users array and return any user with an email matching the email parameter.
-function returnUserOBJ (email) {
+function returnUserIndex (email) {
     for (let i = 0; i < users.length; i++) {
         if ((users[i].email) === email) {
-            return users[i];
+            return i;
         }
     }
 }
@@ -78,6 +112,60 @@ function normalizeDOB (dob) {
     }
 }
 
+// // Adds a serchbar to the searchDiv.
+// function insertSearchbar () {
+//     searchDiv.insertAdjacentHTML("beforeend", 
+//     `<form action="#" method="get">
+//         <input type="search" id="search-input" class="search-input" placeholder="Search...">
+//         <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+//     </form>`);
+
+//     createSearch("keydown");
+//     createSearch("submit")
+// }
+
+// // Creates searchbar functionality
+// function createSearch (eventParam) {
+    
+//     const searchbar = document.querySelector("#search-input");
+
+//     searchDiv.addEventListener(eventParam, (e) => {
+
+//         let usersCopy = users.slice();
+//         let searchList = [];
+//         let text = (searchbar.value).toLowerCase();
+
+//         for (let i = 0; i < usersCopy.length; i++) {
+//             let name = '';
+//             name = (usersCopy[i].name.first + ' ' + usersCopy[i].name.last).toLowerCase();
+//             if (name.indexOf(text) !== -1) {
+//             searchList.push(usersCopy[i]);
+//             }
+//         }
+
+//         if (searchList === []) {
+//             generateUsers(users);
+//         }
+
+//         generateUsers(searchList);
+//         console.log(usersCopy);
+//     });
+// }
+
+
+/*
+Call Functions
+*/
+
+
+// insertSearchbar();
+
+
+/*
+Event Listeners
+*/
+
+
 // Adds an event listener to the gallery div. If a user card is clicked, it calls the generateModal function.
 gallery.addEventListener("click", (e) => {
     let email = "";
@@ -97,7 +185,7 @@ gallery.addEventListener("click", (e) => {
     }
     
     if (email !== "") {
-        generateModal(returnUserOBJ(email));
+        generateModal(returnUserIndex(email));
     }
 });
 
@@ -105,5 +193,22 @@ gallery.addEventListener("click", (e) => {
 body.addEventListener("click", (e) => {
     if (e.target.id === "modal-close-btn" || e.target.parentElement.id === "modal-close-btn") {
         document.querySelector("body > div.modal-container").remove();
+    }
+})
+
+// Adds an event listener the the body. It cycles through the users when the 'next' and 'previous' buttons are selected in the modal.
+body.addEventListener("click", (e) => {
+    if (e.target.id === "modal-next") {
+        if (selectedUser === 11) {
+            generateModal(0);
+        } else {
+            generateModal(selectedUser + 1);
+        }
+    } else if (e.target.id === "modal-prev") {
+        if (selectedUser === 0) {
+            generateModal(11);
+        } else {
+            generateModal(selectedUser - 1);
+        }
     }
 })
