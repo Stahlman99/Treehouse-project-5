@@ -132,6 +132,7 @@ function createSearch (eventParam) {
     const searchbar = document.querySelector("#search-input");
 
     searchDiv.addEventListener(eventParam, (e) => {
+        e.preventDefault()
         let searchList = [];
         searchText = (searchbar.value).toLowerCase();
 
